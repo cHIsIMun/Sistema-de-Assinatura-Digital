@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Meus Documentos{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Meus Documentos</h2>
+    <ul class="list-group">
+        {% for document in documents %}
+            <li class="list-group-item">
+                <a href="{{ url_for('view_document', document_id=document.id) }}">{{ document.name }}</a>
+                {% if document.signature %}
+                    <span class="badge bg-success">Assinado</span>
+                {% else %}
+                    <a href="{{ url_for('sign_document', document_id=document.id) }}" class="btn btn-sm btn-warning">Assinar</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('upload_document') }}" class="btn btn-primary mt-3">Novo Documento</a>
+</div>
+{% endblock %}

@@ -27,7 +27,7 @@ Este projeto implementa um sistema de assinatura de documentos digitais utilizan
 Clone o repositório para o seu ambiente local:
 
 ```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
+git clone https://github.com/cHIsIMun/Sistema-de-Assinatura-Digital.git
 cd seu-repositorio
 ```
 

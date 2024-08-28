@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Visualizar Documento PDF{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Visualizar Documento PDF</h2>
+    <embed src="data:application/pdf;base64,{{ document.content|b64encode }}" width="600" height="800" type="application/pdf">
+    {% if document.signature %}
+        <p class="text-success">Este documento foi assinado.</p>
+        <a href="{{ url_for('verify_document', document_id=document.id) }}" class="btn btn-info">Verificar Assinatura</a>
+    {% else %}
+        <p class="text-warning">Este documento ainda não foi assinado.</p>
+    {% endif %}
+    <a href="{{ url_for('download_document', document_id=document.id) }}" class="btn btn-primary mt-3">Baixar Documento</a>
+    <a href="{{ url_for('list_documents') }}" class="btn btn-secondary mt-3">Voltar</a>
+</div>
+{% endblock %}

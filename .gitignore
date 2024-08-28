@@ -1,0 +1,3 @@
+# ignorar banco de dados instance/site.db
+instance/site.db
+.env
