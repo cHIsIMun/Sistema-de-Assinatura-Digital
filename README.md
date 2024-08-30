@@ -33,12 +33,7 @@ cd seu-repositorio
 
 ### 2. Configurar o Ambiente Virtual
 
-É recomendável criar um ambiente virtual para gerenciar as dependências do projeto:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate  # No Windows, use: venv\Scripts\activate
-```
+O poetry irá gerenciar seu ambiente virtual portanto apenas siga os proximos passos...
 
 ### 3. Instalar as Dependências
 
