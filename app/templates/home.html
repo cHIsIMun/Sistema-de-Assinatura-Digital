@@ -11,7 +11,7 @@
         <a href="{{ url_for('view_public_key') }}" class="btn btn-info">Ver Chave Pública</a>
         <a href="{{ url_for('view_private_key') }}" class="btn btn-warning">Ver Chave Privada</a>
     {% else %}
-        <a href="{{ url_for('generate_keys') }}" class="btn btn-primary">Gerar Par de Chaves</a>
+        <a href="{{ url_for('generate_keys_view') }}" class="btn btn-primary">Gerar Par de Chaves</a>
     {% endif %}
 
     <hr>
