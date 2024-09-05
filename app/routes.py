@@ -57,7 +57,8 @@ def login():
             session['user_id'] = user.id
             return redirect(url_for('home'))
         else:
-            return 'Login failed. Please check your credentials.', 401
+            flash("Login falhou. Por favor, verifique suas credenciais.", "error")
+            return redirect(url_for('login'))
     return render_template('login.html')
 
 @app.route('/logout')

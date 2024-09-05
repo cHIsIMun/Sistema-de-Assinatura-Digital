@@ -23,6 +23,9 @@
         <label for="password" class="form-label">Senha:</label>
         <input type="password" class="form-control" id="password" name="password" required>
     </div>
-    <button type="submit" class="btn btn-primary">Entrar</button>
+    <div class="d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary">Entrar</button>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary">Cadastrar</a>
+    </div>
 </form>
 {% endblock %}
