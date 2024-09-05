@@ -4,12 +4,26 @@
 {% block content %}
 <div class="text-center">
     <h2>Upload de Documento</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <form method="POST" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="file" class="form-label">Selecione um documento:</label>
             <input type="file" class="form-control" id="file" name="file" required>
         </div>
-        <button type="submit" class="btn btn-primary">Salvar Documento</button>
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Salvar Documento</button>
+            <a href="{{ url_for('home') }}" class="btn btn-secondary">Voltar</a>
+        </div>
     </form>
 </div>
 {% endblock %}

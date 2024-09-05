@@ -140,6 +140,12 @@ def view_private_key():
                            action_button_text="Ver Chave Privada")
 
 
+# Definir extensões permitidas
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/upload_document', methods=['GET', 'POST'])
 def upload_document():
     if 'user_id' not in session:
@@ -149,7 +155,7 @@ def upload_document():
 
     if request.method == 'POST':
         file = request.files['file']
-        if file:
+        if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             content = file.read()  # Ler o arquivo como binário
             doc_hash = hashlib.sha256(content).hexdigest()
@@ -164,6 +170,9 @@ def upload_document():
             db.session.add(new_document)
             db.session.commit()
             return redirect(url_for('list_documents'))
+        else:
+            flash("Tipo de arquivo não permitido", 'danger')
+            return redirect(url_for('upload_document'))
     
     return render_template('upload_document.html')
 
