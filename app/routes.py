@@ -215,7 +215,7 @@ def sign_document(document_id):
 
             return redirect(url_for('list_documents'))
         except Exception as e:
-            flash("Erro ao assinar o documento. Verifique a senha e tente novamente.")
+            flash("Erro ao assinar o documento. Verifique a senha e tente novamente.", 'danger')
             return redirect(url_for('sign_document', document_id=document_id))
     
     return render_template('enter_password.html', 
@@ -242,7 +242,6 @@ def delete_document(document_id):
     if document and document.user_id == session['user_id']:
         db.session.delete(document)
         db.session.commit()
-        flash('Documento excluído com sucesso!', 'success')
     else:
         flash('Documento não encontrado ou você não tem permissão para excluí-lo.', 'danger')
 
