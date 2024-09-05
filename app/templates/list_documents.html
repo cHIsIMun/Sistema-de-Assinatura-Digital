@@ -6,16 +6,50 @@
     <h2>Meus Documentos</h2>
     <ul class="list-group">
         {% for document in documents %}
-            <li class="list-group-item">
-                <a href="{{ url_for('view_document', document_id=document.id) }}">{{ document.name }}</a>
-                {% if document.signature %}
-                    <span class="badge bg-success">Assinado</span>
-                {% else %}
-                    <a href="{{ url_for('sign_document', document_id=document.id) }}" class="btn btn-sm btn-warning">Assinar</a>
-                {% endif %}
-            </li>
+        <li class="list-group-item">
+            <a href="{{ url_for('view_document', document_id=document.id) }}">{{ document.name }}</a>
+            {% if document.signature %}
+            <span class="badge bg-success">Assinado</span>
+            {% else %}
+            <a href="{{ url_for('sign_document', document_id=document.id) }}" class="btn btn-sm btn-warning">Assinar</a>
+            {% endif %}
+            <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ document.id }}')">🗑️</button>
+        </li>
         {% endfor %}
     </ul>
-    <a href="{{ url_for('upload_document') }}" class="btn btn-primary mt-3">Novo Documento</a>
+    <div class="d-flex justify-content-between">
+        <a href="{{ url_for('upload_document') }}" class="btn btn-primary mt-3">Novo Documento</a>
+        <a href="{{ url_for('home') }}" class="btn btn-secondary mt-3">Voltar</a>
+    </div>
 </div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir este documento?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(documentId) {
+    const deleteForm = document.getElementById('deleteForm');
+    deleteForm.action = `/delete_document/${documentId}`;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
 {% endblock %}

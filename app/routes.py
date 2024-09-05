@@ -233,6 +233,21 @@ def list_documents():
 
     return render_template('list_documents.html', documents=documents)
 
+@app.route('/delete_document/<int:document_id>', methods=['POST'])
+def delete_document(document_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    document = Document.query.get(document_id)
+    if document and document.user_id == session['user_id']:
+        db.session.delete(document)
+        db.session.commit()
+        flash('Documento excluído com sucesso!', 'success')
+    else:
+        flash('Documento não encontrado ou você não tem permissão para excluí-lo.', 'danger')
+
+    return redirect(url_for('list_documents'))
+
 @app.route('/view_document/<int:document_id>')
 def view_document(document_id):
     if 'user_id' not in session:
