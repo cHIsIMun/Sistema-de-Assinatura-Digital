@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, session
+from flask import render_template, request, redirect, url_for, session, get_flashed_messages
 from sqlalchemy.exc import IntegrityError
 from . import app, db
 from .models import User
@@ -65,6 +65,10 @@ def login():
 def logout():
     session.pop('logged_in', None)
     session.pop('username', None)
+
+    get_flashed_messages(with_categories=True)
+
+    flash('Você saiu com sucesso.', 'success')
     return redirect(url_for('login'))
 
 @app.route('/')
@@ -124,8 +128,11 @@ def view_private_key():
             private_key = decrypt_private_key(user.encrypted_private_key, password)
             return render_template('view_key.html', key=private_key, key_type="Privada")
         except Exception as e:
-            flash("Erro ao descriptografar a chave privada. Verifique a senha e tente novamente.")
-            return redirect(url_for('view_private_key'))
+            flash("Erro ao descriptografar a chave privada. Verifique a senha e tente novamente.", 'danger')
+            return render_template('enter_password.html', 
+                                   action_title="Inserir Senha",
+                                   action_heading="Inserir Senha para Ver Chave Privada",
+                                   action_button_text="Ver Chave Privada")
     
     return render_template('enter_password.html', 
                            action_title="Inserir Senha",
