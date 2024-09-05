@@ -1,4 +1,5 @@
 from flask import render_template, request, redirect, url_for, session
+from sqlalchemy.exc import IntegrityError
 from . import app, db
 from .models import User
 from .auth import hash_password
@@ -31,9 +32,16 @@ def register():
             last_name=user_data.last_name,
             password_hash=hash_password(user_data.password)
         )
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            flash("Usuário cadastrado com sucesso! Por favor, faça login.", "success")
+            return redirect(url_for('login'))
+        except IntegrityError:
+            db.session.rollback()
+            error = "Usuário já existe. Por favor, escolha outro nome de usuário."
+            return render_template('register.html', error=error)
+        
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
