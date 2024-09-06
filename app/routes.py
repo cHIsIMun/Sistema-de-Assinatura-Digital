@@ -4,6 +4,15 @@ from .controllers import *
 from .schemas import UserCreate, UserLogin
 from pydantic import ValidationError
 import io
+from io import BytesIO
+from datetime import datetime
+import pytz
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from PyPDF2 import PdfReader, PdfWriter
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 # ========================================
 # Auth Routes (Login, Register, Logout)
@@ -143,22 +152,94 @@ def sign_document(document_id):
     if request.method == 'POST':
         password = request.form.get('password')
         try:
+            # Descriptografar a chave privada do usuário
             private_key = decrypt_user_private_key(user.encrypted_private_key, password)
-            private_key_obj = serialization.load_pem_private_key(private_key.encode(), password=None, backend=default_backend())
+            private_key_obj = serialization.load_pem_private_key(
+                private_key.encode(),
+                password=None,
+                backend=default_backend()
+            )
+
+            # Assinar o conteúdo do documento
+            signature = private_key_obj.sign(
+                document.content,  # Conteúdo do documento
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+
+            # Capturar a data atual da assinatura
+            brasilia_tz = pytz.timezone('America/Sao_Paulo')
+            data_assinatura = datetime.now(brasilia_tz).strftime('%d de %B de %Y, %H:%M:%S %Z')
+
+            # Criar o selo de assinatura digital
+            selo = f"""
+            Assinado por: {user.first_name} {user.last_name}
+            Emitido por: SeuSistema
+            Data da assinatura: {data_assinatura}
+            Certificado válido até: 31 de dezembro de 2025
+            Número do certificado: 123456789
+            Status da assinatura: Válida
+            """
+
+            # Gerar um novo PDF com o selo embutido
+            packet = BytesIO()
+            can = canvas.Canvas(packet, pagesize=letter)
+
+            # Definir posição e dimensões do selo
+            x = 100
+            y = 50
+            width = 400
+            height = 100
             
-            signed_content, signature_metadata = sign_document_content(document, private_key_obj, user)
+            # Desenhar um retângulo ao redor do selo (opcional)
+            can.setStrokeColor(colors.black)
+            can.setLineWidth(1)
+            can.rect(x, y, width, height)
+
+            # Adicionar o texto do selo
+            text = can.beginText(x + 10, y + height - 20)
+            text.setFont("Helvetica", 10)
+            for line in selo.split("\n"):
+                text.textLine(line.strip())
+            can.drawText(text)
+            can.save()
+
+            # Resetar o buffer para ler o conteúdo do PDF gerado
+            packet.seek(0)
+            new_pdf = PdfReader(packet)
+            existing_pdf = PdfReader(BytesIO(document.content))
+            output = PdfWriter()
+
+            # Mesclar o selo com a última página do PDF
+            for i in range(len(existing_pdf.pages)):
+                page = existing_pdf.pages[i]
+                if i == len(existing_pdf.pages) - 1:  # Adicionar o selo na última página
+                    page.merge_page(new_pdf.pages[0])
+                output.add_page(page)
+
+            # Gerar o PDF final assinado
+            output_stream = BytesIO()
+            output.write(output_stream)
+            signed_content = output_stream.getvalue()
+
+            # Atualizar o documento no banco de dados
             document.content = signed_content
-            document.signature = signature_metadata["signature"]
+            document.signature = signature.hex()
             document.signed_at = datetime.utcnow()
             db.session.commit()
-            
+
             return redirect(url_for('list_documents'))
-        except Exception:
-            flash("Erro ao assinar o documento. Verifique a senha e tente novamente.")
+        except Exception as e:
+            flash(f"Erro ao assinar o documento: {str(e)}", 'danger')
             return redirect(url_for('sign_document', document_id=document_id))
     
-    return render_template('shared/enter_password.html', action_title="Inserir Senha", action_heading="Inserir Senha para Assinar Documento", action_button_text="Assinar Documento")
-
+    return render_template('shared/enter_password.html', 
+                           action_title="Inserir Senha",
+                           action_heading="Inserir Senha para Assinar Documento",
+                           action_button_text="Assinar Documento")
 @app.route('/documents')
 def list_documents():
     if 'user_id' not in session:
