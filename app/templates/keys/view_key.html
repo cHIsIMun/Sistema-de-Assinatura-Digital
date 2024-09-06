@@ -1,0 +1,15 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ver Chave{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Chave {{ key_type }}</h2>
+    <pre>{{ key }}</pre>
+    {% set url = url_for('home') %}
+    {% set style = 'secondary' %}
+    {% set text = 'Voltar' %}
+    {% include 'components/button.html' %}
+</div>
+{% endblock %}
+    

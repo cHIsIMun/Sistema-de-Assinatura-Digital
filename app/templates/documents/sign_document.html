@@ -1,0 +1,13 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Assinar Documento{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Assinar Documento</h2>
+    <form method="POST">
+        {% include 'components/form_group.html' with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
+        <button type="submit" class="btn btn-primary">Assinar Documento</button>
+    </form>
+</div>
+{% endblock %}

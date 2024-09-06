@@ -1,0 +1,24 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Registrar-se{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Registrar-se</h2>
+    <form method="POST">
+        {% with id='username', label='Usuário', type='text', name='username', placeholder='Digite seu nome de usuário', value='' %}
+            {% include 'components/form_group.html' %}
+        {% endwith %}
+        {% with id='first_name', label='Primeiro Nome', type='text', name='first_name', placeholder='Digite seu primeiro nome', value='' %}
+            {% include 'components/form_group.html' %}
+        {% endwith %}
+        {% with id='last_name', label='Último Nome', type='text', name='last_name', placeholder='Digite seu último nome', value='' %}
+            {% include 'components/form_group.html' %}
+        {% endwith %}
+        {% with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
+            {% include 'components/form_group.html' %}
+        {% endwith %}
+        <button type="submit" class="btn btn-primary">Registrar</button>
+    </form>
+</div>
+{% endblock %}

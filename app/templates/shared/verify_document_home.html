@@ -1,0 +1,29 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Verificar Documento Assinado{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Verificar Documento Assinado</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% set id = 'file' %}
+        {% set label = 'Selecione um documento:' %}
+        {% set type = 'file' %}
+        {% set name = 'file' %}
+        {% set placeholder = '' %}
+        {% set value = '' %}
+        {% include 'components/form_group.html' %}
+        
+        <button type="submit" class="btn btn-primary mt-3">Verificar</button>
+    </form>
+
+    {% if document_info %}
+    <div class="mt-4">
+        <h3>Resultado da Verificação:</h3>
+        <p>{{ verification_result }}</p>
+        <p><strong>Documento:</strong> {{ document_info.name }}</p>
+        <p><strong>Assinado por:</strong> {{ document_info.user.first_name }} {{ document_info.user.last_name }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

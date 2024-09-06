@@ -1,0 +1,25 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Página Inicial{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Bem-vindo à Página Inicial</h2>
+    <p class="lead">Olá, {{ user.first_name }}!</p>
+    <div class="d-flex justify-content-center">
+    {% if keys_generated %}
+        <p>Suas chaves já foram geradas.</p>
+        {% with url=url_for('view_public_key'), style='info', text='Ver Chave Pública' %}
+            {% include 'components/button.html' %}
+        {% endwith %}
+        {% with url=url_for('view_private_key'), style='warning', text='Ver Chave Privada' %}
+            {% include 'components/button.html' %}
+        {% endwith %}
+    {% else %}
+        {% with url=url_for('generate_keys_view'), style='primary', text='Gerar Par de Chaves' %}
+            {% include 'components/button.html' %}
+        {% endwith %}
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Gerar Chaves{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Gerar Par de Chaves</h2>
+    <form method="POST">
+        {% set id = 'password' %}
+        {% set label = 'Senha' %}
+        {% set type = 'password' %}
+        {% set name = 'password' %}
+        {% set placeholder = 'Digite sua senha' %}
+        {% set value = '' %}
+        {% include 'components/form_group.html' %}
+        <button type="submit" class="btn btn-primary">Gerar</button>
+    </form>
+</div>
+{% endblock %}
