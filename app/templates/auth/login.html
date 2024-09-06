@@ -1,0 +1,18 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Login</h2>
+    <form method="POST">
+        {% with id='username', label='Usuário', type='text', name='username', placeholder='Digite seu nome de usuário', value='' %}
+            {% include 'components/form_group.html' %}
+        {% endwith %}
+        {% with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
+            {% include 'components/form_group.html' %}
+        {% endwith %}
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+</div>
+{% endblock %}

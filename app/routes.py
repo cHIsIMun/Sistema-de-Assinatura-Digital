@@ -1,22 +1,21 @@
-from flask import render_template, request, redirect, url_for, session
+from flask import render_template, request, redirect, url_for, session, flash, send_file
+from werkzeug.utils import secure_filename
 from . import app, db
-from .models import User
+from .models import User, Document
 from .auth import hash_password
 from .schemas import UserCreate, UserLogin
-from pydantic import ValidationError
 from .crypto import generate_keys, encrypt_private_key, decrypt_private_key
-from flask import flash
-from werkzeug.utils import secure_filename
-import hashlib
-from .models import Document
+from pydantic import ValidationError
 from datetime import datetime
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
+import hashlib
 import io
-from flask import send_file
 
+# ========================================
+# Auth Routes (Login, Register, Logout)
+# ========================================
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -24,7 +23,7 @@ def register():
         try:
             user_data = UserCreate(**request.form)
         except ValidationError as e:
-            return render_template('register.html', error=e.errors())
+            return render_template('auth/register.html', error=e.errors())
         new_user = User(
             username=user_data.username,
             first_name=user_data.first_name,
@@ -34,7 +33,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
-    return render_template('register.html')
+    return render_template('auth/register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -42,21 +41,26 @@ def login():
         try:
             user_data = UserLogin(**request.form)
         except ValidationError as e:
-            return render_template('login.html', error=e.errors())
+            return render_template('auth/login.html', error=e.errors())
         user = User.query.filter_by(username=user_data.username, password_hash=hash_password(user_data.password)).first()
         if user:
             session['logged_in'] = True
             session['user_id'] = user.id
             return redirect(url_for('home'))
         else:
-            return 'Login failed. Please check your credentials.', 401
-    return render_template('login.html')
+            flash('Login failed. Please check your credentials.')
+            return redirect(url_for('login'))
+    return render_template('auth/login.html')
 
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
-    session.pop('username', None)
+    session.pop('user_id', None)
     return redirect(url_for('login'))
+
+# ========================================
+# Home and Key Management
+# ========================================
 
 @app.route('/')
 def home():
@@ -66,7 +70,7 @@ def home():
     user = User.query.get(session['user_id'])
     keys_generated = user.public_key is not None
     
-    return render_template('home.html', user=user, keys_generated=keys_generated)
+    return render_template('layouts/home.html', user=user, keys_generated=keys_generated)
 
 @app.route('/generate_keys', methods=['GET', 'POST'])
 def generate_keys_view():
@@ -88,7 +92,7 @@ def generate_keys_view():
         
         return redirect(url_for('home'))
     
-    return render_template('generate_keys.html')
+    return render_template('keys/generate_keys.html')
 
 @app.route('/view_public_key')
 def view_public_key():
@@ -97,7 +101,7 @@ def view_public_key():
 
     user = User.query.get(session['user_id'])
     if user.public_key:
-        return render_template('view_key.html', key=user.public_key, key_type="Pública")
+        return render_template('keys/view_key.html', key=user.public_key, key_type="Pública")
     else:
         flash("Chave pública não encontrada.")
         return redirect(url_for('home'))
@@ -113,16 +117,19 @@ def view_private_key():
         password = request.form.get('password')
         try:
             private_key = decrypt_private_key(user.encrypted_private_key, password)
-            return render_template('view_key.html', key=private_key, key_type="Privada")
+            return render_template('keys/view_key.html', key=private_key, key_type="Privada")
         except Exception as e:
             flash("Erro ao descriptografar a chave privada. Verifique a senha e tente novamente.")
             return redirect(url_for('view_private_key'))
     
-    return render_template('enter_password.html', 
+    return render_template('shared/enter_password.html', 
                            action_title="Inserir Senha",
                            action_heading="Inserir Senha para Ver Chave Privada",
                            action_button_text="Ver Chave Privada")
 
+# ========================================
+# Document Management (Upload, Sign, View, Verify)
+# ========================================
 
 @app.route('/upload_document', methods=['GET', 'POST'])
 def upload_document():
@@ -149,7 +156,7 @@ def upload_document():
             db.session.commit()
             return redirect(url_for('list_documents'))
     
-    return render_template('upload_document.html')
+    return render_template('documents/upload_document.html')
 
 @app.route('/sign_document/<int:document_id>', methods=['GET', 'POST'])
 def sign_document(document_id):
@@ -193,7 +200,7 @@ def sign_document(document_id):
             flash("Erro ao assinar o documento. Verifique a senha e tente novamente.")
             return redirect(url_for('sign_document', document_id=document_id))
     
-    return render_template('enter_password.html', 
+    return render_template('shared/enter_password.html', 
                            action_title="Inserir Senha",
                            action_heading="Inserir Senha para Assinar Documento",
                            action_button_text="Assinar Documento")
@@ -206,7 +213,7 @@ def list_documents():
     user = User.query.get(session['user_id'])
     documents = Document.query.filter_by(user_id=user.id).all()
 
-    return render_template('list_documents.html', documents=documents)
+    return render_template('documents/list_documents.html', documents=documents)
 
 @app.route('/view_document/<int:document_id>')
 def view_document(document_id):
@@ -216,15 +223,14 @@ def view_document(document_id):
     document = Document.query.get_or_404(document_id)
 
     if document.name.endswith('.pdf'):
-        return render_template('view_pdf_document.html', document=document)
+        return render_template('documents/view_pdf_document.html', document=document)
     else:
         try:
             content = document.content.decode('utf-8')
         except UnicodeDecodeError:
             content = "Este arquivo não é um texto legível."
 
-        return render_template('view_document.html', document=document, content=content)
-
+        return render_template('documents/view_document.html', document=document, content=content)
 
 @app.route('/verify_document/<int:document_id>')
 def verify_document(document_id):
@@ -279,7 +285,7 @@ def verify_document_home():
             else:
                 verification_result = "Documento não encontrado no sistema ou não assinado."
 
-    return render_template('verify_document_home.html', document_info=document_info, verification_result=verification_result)
+    return render_template('shared/verify_document_home.html', document_info=document_info, verification_result=verification_result)
 
 @app.route('/download_document/<int:document_id>')
 def download_document(document_id):

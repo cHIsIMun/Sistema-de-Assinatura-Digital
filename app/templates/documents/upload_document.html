@@ -1,0 +1,20 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Upload de Documento{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>Upload de Documento</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% set id = 'document' %}
+        {% set label = 'Selecionar Documento' %}
+        {% set type = 'file' %}
+        {% set name = 'file' %}
+        {% set placeholder = '' %}
+        {% set value = '' %}
+        {% include 'components/form_group.html' %}
+        
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+{% endblock %}

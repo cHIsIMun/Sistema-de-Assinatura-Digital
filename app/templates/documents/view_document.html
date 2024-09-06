@@ -1,0 +1,18 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Visualizar Documento{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h2>{{ document.name }}</h2>
+    <pre>{{ document.content }}</pre>
+    {% if document.signature %}
+        <p class="text-success">Este documento foi assinado.</p>
+        {% include 'components/button.html' with url=url_for('verify_document', document_id=document.id), style='info', text='Verificar Assinatura' %}
+    {% else %}
+        <p class="text-warning">Este documento ainda não foi assinado.</p>
+    {% endif %}
+    {% include 'components/button.html' with url=url_for('download_document', document_id=document.id), style='primary', text='Baixar Documento' %}
+    {% include 'components/button.html' with url=url_for('list_documents'), style='secondary', text='Voltar' %}
+</div>
+{% endblock %}
