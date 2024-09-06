@@ -1,16 +1,8 @@
 from flask import render_template, request, redirect, url_for, session, flash, send_file
-from werkzeug.utils import secure_filename
 from . import app, db
-from .models import User, Document
-from .auth import hash_password
+from .controllers import *
 from .schemas import UserCreate, UserLogin
-from .crypto import generate_keys, encrypt_private_key, decrypt_private_key
 from pydantic import ValidationError
-from datetime import datetime
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.backends import default_backend
-import hashlib
 import io
 
 # ========================================
@@ -24,15 +16,12 @@ def register():
             user_data = UserCreate(**request.form)
         except ValidationError as e:
             return render_template('auth/register.html', error=e.errors())
-        new_user = User(
-            username=user_data.username,
-            first_name=user_data.first_name,
-            last_name=user_data.last_name,
-            password_hash=hash_password(user_data.password)
-        )
+        
+        new_user = create_user(user_data)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
+    
     return render_template('auth/register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -42,7 +31,8 @@ def login():
             user_data = UserLogin(**request.form)
         except ValidationError as e:
             return render_template('auth/login.html', error=e.errors())
-        user = User.query.filter_by(username=user_data.username, password_hash=hash_password(user_data.password)).first()
+        
+        user = get_user_by_credentials(user_data.username, user_data.password)
         if user:
             session['logged_in'] = True
             session['user_id'] = user.id
@@ -50,6 +40,7 @@ def login():
         else:
             flash('Login failed. Please check your credentials.')
             return redirect(url_for('login'))
+    
     return render_template('auth/login.html')
 
 @app.route('/logout')
@@ -57,6 +48,7 @@ def logout():
     session.pop('logged_in', None)
     session.pop('user_id', None)
     return redirect(url_for('login'))
+
 
 # ========================================
 # Home and Key Management
@@ -67,9 +59,8 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    user = User.query.get(session['user_id'])
+    user = get_user_by_id(session['user_id'])
     keys_generated = user.public_key is not None
-    
     return render_template('layouts/home.html', user=user, keys_generated=keys_generated)
 
 @app.route('/generate_keys', methods=['GET', 'POST'])
@@ -77,17 +68,14 @@ def generate_keys_view():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    user = User.query.get(session['user_id'])
+    user = get_user_by_id(session['user_id'])
     
     if request.method == 'POST':
         password = request.form.get('password')
+        public_key, encrypted_private_key = generate_user_keys(password)
         
-        # Gerar as chaves
-        public_key, encrypted_private_key = generate_keys(password)
-        
-        # Armazenar as chaves no banco de dados
         user.public_key = public_key
-        user.encrypted_private_key = encrypted_private_key  # Salvando a chave privada criptografada
+        user.encrypted_private_key = encrypted_private_key
         db.session.commit()
         
         return redirect(url_for('home'))
@@ -98,8 +86,8 @@ def generate_keys_view():
 def view_public_key():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-
-    user = User.query.get(session['user_id'])
+    
+    user = get_user_by_id(session['user_id'])
     if user.public_key:
         return render_template('keys/view_key.html', key=user.public_key, key_type="Pública")
     else:
@@ -111,21 +99,19 @@ def view_private_key():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    user = User.query.get(session['user_id'])
+    user = get_user_by_id(session['user_id'])
     
     if request.method == 'POST':
         password = request.form.get('password')
         try:
-            private_key = decrypt_private_key(user.encrypted_private_key, password)
+            private_key = decrypt_user_private_key(user.encrypted_private_key, password)
             return render_template('keys/view_key.html', key=private_key, key_type="Privada")
-        except Exception as e:
+        except Exception:
             flash("Erro ao descriptografar a chave privada. Verifique a senha e tente novamente.")
             return redirect(url_for('view_private_key'))
     
-    return render_template('shared/enter_password.html', 
-                           action_title="Inserir Senha",
-                           action_heading="Inserir Senha para Ver Chave Privada",
-                           action_button_text="Ver Chave Privada")
+    return render_template('shared/enter_password.html', action_title="Inserir Senha", action_heading="Inserir Senha para Ver Chave Privada", action_button_text="Ver Chave Privada")
+
 
 # ========================================
 # Document Management (Upload, Sign, View, Verify)
@@ -136,22 +122,10 @@ def upload_document():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    user = User.query.get(session['user_id'])
-
     if request.method == 'POST':
         file = request.files['file']
         if file:
-            filename = secure_filename(file.filename)
-            content = file.read()  # Ler o arquivo como binário
-            doc_hash = hashlib.sha256(content).hexdigest()
-
-            # Salvar documento no banco de dados
-            new_document = Document(
-                name=filename,
-                content=content,  # Armazenar o conteúdo binário
-                hash=doc_hash,
-                user_id=user.id
-            )
+            new_document = process_document_upload(file, session['user_id'])  # Chame a função corrigida aqui
             db.session.add(new_document)
             db.session.commit()
             return redirect(url_for('list_documents'))
@@ -163,56 +137,34 @@ def sign_document(document_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    user = User.query.get(session['user_id'])
-    document = Document.query.get_or_404(document_id)
+    user = get_user_by_id(session['user_id'])
+    document = get_document_by_id(document_id)
 
     if request.method == 'POST':
         password = request.form.get('password')
         try:
-            private_key = decrypt_private_key(user.encrypted_private_key, password)
-            private_key_obj = serialization.load_pem_private_key(
-                private_key.encode(),
-                password=None,
-                backend=default_backend()
-            )
-
-            # Assinar o conteúdo binário do documento
-            signature = private_key_obj.sign(
-                document.content,  # Assinando o conteúdo binário diretamente
-                padding.PSS(
-                    mgf=padding.MGF1(hashes.SHA256()),
-                    salt_length=padding.PSS.MAX_LENGTH
-                ),
-                hashes.SHA256()
-            )
-
-            # Criar um novo PDF com a assinatura embutida
-            signed_content = document.content + b"\nSignature: " + signature
-
-            # Atualizar o documento no banco de dados
+            private_key = decrypt_user_private_key(user.encrypted_private_key, password)
+            private_key_obj = serialization.load_pem_private_key(private_key.encode(), password=None, backend=default_backend())
+            
+            signed_content, signature_metadata = sign_document_content(document, private_key_obj, user)
             document.content = signed_content
-            document.signature = signature.hex()
+            document.signature = signature_metadata["signature"]
             document.signed_at = datetime.utcnow()
             db.session.commit()
-
+            
             return redirect(url_for('list_documents'))
-        except Exception as e:
+        except Exception:
             flash("Erro ao assinar o documento. Verifique a senha e tente novamente.")
             return redirect(url_for('sign_document', document_id=document_id))
     
-    return render_template('shared/enter_password.html', 
-                           action_title="Inserir Senha",
-                           action_heading="Inserir Senha para Assinar Documento",
-                           action_button_text="Assinar Documento")
+    return render_template('shared/enter_password.html', action_title="Inserir Senha", action_heading="Inserir Senha para Assinar Documento", action_button_text="Assinar Documento")
 
 @app.route('/documents')
 def list_documents():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    user = User.query.get(session['user_id'])
-    documents = Document.query.filter_by(user_id=user.id).all()
-
+    documents = get_all_documents_by_user(session['user_id'])
     return render_template('documents/list_documents.html', documents=documents)
 
 @app.route('/view_document/<int:document_id>')
@@ -220,41 +172,27 @@ def view_document(document_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    document = Document.query.get_or_404(document_id)
-
-    if document.name.endswith('.pdf'):
-        return render_template('documents/view_pdf_document.html', document=document)
-    else:
-        try:
-            content = document.content.decode('utf-8')
-        except UnicodeDecodeError:
-            content = "Este arquivo não é um texto legível."
-
-        return render_template('documents/view_document.html', document=document, content=content)
+    document = get_document_by_id(document_id)
+    return render_template('documents/view_pdf_document.html', document=document)
 
 @app.route('/verify_document/<int:document_id>')
 def verify_document(document_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    document = Document.query.get_or_404(document_id)
-    user = User.query.get(document.user_id)
-
-    public_key = serialization.load_pem_public_key(user.public_key.encode(), backend=default_backend())
-
-    try:
-        public_key.verify(
-            bytes.fromhex(document.signature),
-            document.hash.encode(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            hashes.SHA256()
-        )
-        flash("A assinatura é válida.")
-    except Exception:
-        flash("A assinatura não pôde ser verificada ou é inválida.")
+    document = get_document_by_id(document_id)
+    content, signature_metadata = extract_signature_from_file(document.content)
+    
+    if signature_metadata:
+        user = get_user_by_id(signature_metadata["user"]["id"])
+        public_key = serialization.load_pem_public_key(user.public_key.encode(), backend=default_backend())
+        
+        if verify_signature(public_key, content, signature_metadata):
+            flash(f"A assinatura é válida e pertence a {signature_metadata['user']['name']}.")
+        else:
+            flash("A assinatura não pôde ser verificada ou é inválida.")
+    else:
+        flash("O documento não possui uma assinatura válida.")
 
     return redirect(url_for('view_document', document_id=document_id))
 
@@ -270,33 +208,31 @@ def verify_document_home():
         file = request.files['file']
         if file:
             content = file.read()
+            content, signature_metadata = extract_signature_from_file(content)
 
-            # Tentar encontrar um documento no banco de dados com o mesmo conteúdo
-            documents = Document.query.all()
-            for document in documents:
-                if content.startswith(document.content[:-len(document.signature)]) and content.endswith(b"Signature: " + bytes.fromhex(document.signature)):
+            if signature_metadata:
+                user = get_user_by_id(signature_metadata["user"]["id"])
+                public_key = serialization.load_pem_public_key(user.public_key.encode(), backend=default_backend())
+
+                if verify_signature(public_key, content, signature_metadata):
+                    verification_result = f"A assinatura é válida e pertence a {user.first_name} {user.last_name}."
                     document_info = {
-                        "name": document.name,
-                        "signed": document.signature is not None,
-                        "user": document.user
+                        "name": file.filename,
+                        "user": user
                     }
-                    verification_result = "A assinatura é válida e foi encontrada no sistema."
-                    break
+                else:
+                    verification_result = "A assinatura não pôde ser verificada ou é inválida."
             else:
-                verification_result = "Documento não encontrado no sistema ou não assinado."
+                verification_result = "O documento não possui uma assinatura válida."
 
     return render_template('shared/verify_document_home.html', document_info=document_info, verification_result=verification_result)
+
+
 
 @app.route('/download_document/<int:document_id>')
 def download_document(document_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    document = Document.query.get_or_404(document_id)
-
-    return send_file(
-        io.BytesIO(document.content),
-        as_attachment=True,
-        download_name=document.name,
-        mimetype='application/pdf'
-    )
+    document = get_document_by_id(document_id)
+    return send_file(io.BytesIO(document.content), as_attachment=True, download_name=document.name, mimetype='application/pdf')
