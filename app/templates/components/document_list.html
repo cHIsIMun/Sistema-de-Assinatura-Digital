@@ -1,0 +1,25 @@
+<ul class="list-group list-group-flush">
+    {% for document in documents %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>{{ document.name }}</span>
+        <span class="d-flex gap-2">
+            {% set url = url_for('view_document', document_id=document.id) %}
+            {% set style = 'info' %}
+            {% set text = 'Ver' %}
+            {% include 'components/button.html' %}
+
+            {% if document.signature %}
+                {% set url = url_for('verify_document', document_id=document.id) %}
+                {% set style = 'success' %}
+                {% set text = 'Verificar Assinatura' %}
+                {% include 'components/button.html' %}
+            {% else %}
+                {% set url = url_for('sign_document', document_id=document.id) %}
+                {% set style = 'warning' %}
+                {% set text = 'Assinar' %}
+                {% include 'components/button.html' %}
+            {% endif %}
+        </span>
+    </li>
+    {% endfor %}
+</ul>

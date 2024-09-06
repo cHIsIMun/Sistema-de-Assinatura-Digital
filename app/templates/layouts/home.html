@@ -3,23 +3,75 @@
 {% block title %}Página Inicial{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Bem-vindo à Página Inicial</h2>
-    <p class="lead">Olá, {{ user.first_name }}!</p>
-    <div class="d-flex justify-content-center">
-    {% if keys_generated %}
-        <p>Suas chaves já foram geradas.</p>
-        {% with url=url_for('view_public_key'), style='info', text='Ver Chave Pública' %}
-            {% include 'components/button.html' %}
-        {% endwith %}
-        {% with url=url_for('view_private_key'), style='warning', text='Ver Chave Privada' %}
-            {% include 'components/button.html' %}
-        {% endwith %}
-    {% else %}
-        {% with url=url_for('generate_keys_view'), style='primary', text='Gerar Par de Chaves' %}
-            {% include 'components/button.html' %}
-        {% endwith %}
-    {% endif %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    <div class="bg-light" style="width: 250px; height: 100vh; position: fixed; top: 0; left: 0; border-right: 1px solid #ddd;">
+        {% include 'components/sidebar.html' %}
+    </div>
+    
+    <!-- Main Content -->
+    <div class="container" style="margin-left: 250px; padding: 20px;">
+        <div class="text-center">
+            <div class="card shadow-lg p-4" style="width: 100%; max-width: 700px; border-radius: 15px;">
+                <div class="text-center mb-4">
+                    <h2 class="text-primary" style="font-weight: bold;">Bem-vindo à Página Inicial</h2>
+                    <p class="lead text-muted">Olá, {{ user.first_name }}!</p>
+                </div>
+                <div class="d-flex justify-content-center flex-column align-items-center">
+                {% if keys_generated %}
+                    <p class="text-success mb-3">Suas chaves já foram geradas.</p>
+                    <div class="d-flex gap-2">
+                        {% with url=url_for('view_public_key'), style='info', text='Ver Chave Pública' %}
+                            {% include 'components/button.html' %}
+                        {% endwith %}
+                        {% with url=url_for('view_private_key'), style='warning', text='Ver Chave Privada' %}
+                            {% include 'components/button.html' %}
+                        {% endwith %}
+                    </div>
+                {% else %}
+                    {% with url=url_for('generate_keys_view'), style='primary', text='Gerar Par de Chaves' %}
+                        {% include 'components/button.html' %}
+                    {% endwith %}
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h3 class="text-primary">Documentos</h3>
+            {% if documents %}
+                <div class="row">
+                    {% for document in documents %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ document.name }}</h5>
+                                    <p class="card-text">Clique no botão para visualizar ou gerenciar o documento.</p>
+                                    <a href="{{ url_for('view_document', document_id=document.id) }}" class="btn btn-primary">Visualizar</a>
+                                    {% if document.signature %}
+                                        <a href="{{ url_for('verify_document', document_id=document.id) }}" class="btn btn-info">Verificar Assinatura</a>
+                                    {% else %}
+                                        <a href="{{ url_for('sign_document', document_id=document.id) }}" class="btn btn-warning">Assinar</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center">
+                    <p class="lead">Carregue algum documento para começar.</p>
+                    <a href="{{ url_for('upload_document') }}" class="btn btn-primary">Fazer Upload</a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Inclui a lista de documentos utilizando o componente -->
+        <div class="mt-4">
+            <h3 class="text-primary">Lista de Documentos</h3>
+            {% include 'components/document_list.html' %}
+        </div>
+
     </div>
 </div>
 {% endblock %}

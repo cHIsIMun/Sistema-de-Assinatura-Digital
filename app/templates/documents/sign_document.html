@@ -3,11 +3,17 @@
 {% block title %}Assinar Documento{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Assinar Documento</h2>
-    <form method="POST">
-        {% include 'components/form_group.html' with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
-        <button type="submit" class="btn btn-primary">Assinar Documento</button>
-    </form>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh; background-color: #f8f9fa;">
+    <div class="card shadow-lg p-4" style="width: 400px; border-radius: 15px;">
+        <div class="text-center mb-4">
+            <h2 class="text-primary" style="font-weight: bold;">Assinar Documento</h2>
+        </div>
+        <form method="POST">
+            {% include 'components/form_group.html' with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-block" style="padding: 10px 0; font-size: 16px; border-radius: 10px;">Assinar Documento</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

@@ -3,22 +3,32 @@
 {% block title %}Registrar-se{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Registrar-se</h2>
-    <form method="POST">
-        {% with id='username', label='Usuário', type='text', name='username', placeholder='Digite seu nome de usuário', value='' %}
-            {% include 'components/form_group.html' %}
-        {% endwith %}
-        {% with id='first_name', label='Primeiro Nome', type='text', name='first_name', placeholder='Digite seu primeiro nome', value='' %}
-            {% include 'components/form_group.html' %}
-        {% endwith %}
-        {% with id='last_name', label='Último Nome', type='text', name='last_name', placeholder='Digite seu último nome', value='' %}
-            {% include 'components/form_group.html' %}
-        {% endwith %}
-        {% with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
-            {% include 'components/form_group.html' %}
-        {% endwith %}
-        <button type="submit" class="btn btn-primary">Registrar</button>
-    </form>
+<div class="d-flex align-items-center justify-content-center" style="height: 100vh; background-color: #f8f9fa;">
+    <div class="card shadow-lg p-4" style="width: 400px; border-radius: 15px;">
+        <div class="text-center mb-4">
+            <h2 class="text-primary" style="font-weight: bold;">Registrar-se</h2>
+            <p class="text-muted">Crie sua conta</p>
+        </div>
+        <form method="POST">
+            {% with id='username', label='Usuário', type='text', name='username', placeholder='Digite seu nome de usuário', value='' %}
+                {% include 'components/form_group.html' %}
+            {% endwith %}
+            {% with id='first_name', label='Primeiro Nome', type='text', name='first_name', placeholder='Digite seu primeiro nome', value='' %}
+                {% include 'components/form_group.html' %}
+            {% endwith %}
+            {% with id='last_name', label='Último Nome', type='text', name='last_name', placeholder='Digite seu último nome', value='' %}
+                {% include 'components/form_group.html' %}
+            {% endwith %}
+            {% with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
+                {% include 'components/form_group.html' %}
+            {% endwith %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-block" style="padding: 10px 0; font-size: 16px; border-radius: 10px;">Registrar</button>
+            </div>
+        </form>
+        <div class="mt-3 text-center">
+            <a href="#" class="text-muted">Já tem uma conta? Faça login</a>
+        </div>
+    </div>
 </div>
 {% endblock %}
