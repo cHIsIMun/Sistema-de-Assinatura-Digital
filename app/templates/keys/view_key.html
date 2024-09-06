@@ -1,15 +1,66 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}Ver Chave{% endblock %}
+{% block title %}🔑 Ver Chave {{ key_type }}{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Chave {{ key_type }}</h2>
-    <pre>{{ key }}</pre>
-    {% set url = url_for('home') %}
-    {% set style = 'secondary' %}
-    {% set text = 'Voltar' %}
-    {% include 'components/button.html' %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg" style="width: 100%; max-width: 600px;">
+        <div class="card-body text-center">
+            <h2 class="card-title">🔑 Chave {{ key_type }}</h2>
+            <p class="card-text">Aqui está sua chave {{ key_type }}:</p>
+            <pre id="keyContent" class="bg-light p-3 text-start" style="white-space: pre-wrap;">{{ key }}</pre>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <!-- Botão para copiar a chave -->
+                <button id="copyBtn" class="btn btn-outline-primary w-50 me-2">📋 Copiar</button>
+
+                <!-- Botão para baixar a chave como arquivo .pem -->
+                <button id="downloadBtn" class="btn btn-outline-secondary w-50">⬇️ Baixar</button>
+            </div>
+
+            <a href="{{ url_for('home') }}" class="btn btn-secondary w-100 mt-3">Voltar</a>
+        </div>
+    </div>
 </div>
+
+<!-- Toast de feedback -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="copyToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                🔑 Chave {{key_type}} copiada com sucesso!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Função para copiar o conteúdo da chave
+    document.getElementById('copyBtn').addEventListener('click', function() {
+        var keyText = document.getElementById('keyContent').innerText;
+        navigator.clipboard.writeText(keyText).then(function() {
+            var toast = new bootstrap.Toast(document.getElementById('copyToast'));
+            toast.show();
+        }).catch(function(error) {
+            alert('Erro ao copiar chave: ' + error);
+        });
+    });
+
+    // Função para baixar o conteúdo da chave como arquivo .pem
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        var keyText = document.getElementById('keyContent').innerText;
+        var blob = new Blob([keyText], { type: 'text/plain' });
+        var link = document.createElement('a');
+        // obj Pública to public e Privada to private
+        const kt = {
+            'Pública': 'public',
+            'Privada': 'private'
+        }
+
+        link.href = URL.createObjectURL(blob);
+        link.download = `${kt['{{ key_type }}']}_key.pem`;
+        link.click();
+    });
+</script>
 {% endblock %}
-    

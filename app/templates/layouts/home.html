@@ -1,25 +1,69 @@
-{% extends "layouts/base.html" %}
-
-{% block title %}Página Inicial{% endblock %}
-
+{% extends "layouts/base.html" %} {% block title %}Página Inicial{% endblock %}
 {% block content %}
-<div class="text-center">
-    <h2>Bem-vindo à Página Inicial</h2>
-    <p class="lead">Olá, {{ user.first_name }}!</p>
-    <div class="d-flex justify-content-center">
-    {% if keys_generated %}
-        <p>Suas chaves já foram geradas.</p>
-        {% with url=url_for('view_public_key'), style='info', text='Ver Chave Pública' %}
-            {% include 'components/button.html' %}
-        {% endwith %}
-        {% with url=url_for('view_private_key'), style='warning', text='Ver Chave Privada' %}
-            {% include 'components/button.html' %}
-        {% endwith %}
-    {% else %}
-        {% with url=url_for('generate_keys_view'), style='primary', text='Gerar Par de Chaves' %}
-            {% include 'components/button.html' %}
-        {% endwith %}
-    {% endif %}
+<div class="container mt-4">
+  <!-- Card de boas-vindas -->
+  <div class="card text-center shadow-lg mb-4">
+    <div class="card-body">
+      <h1 class="card-title">👋 Bem-vindo, {{ user.first_name }}!</h1>
+      <p class="card-text">
+        É ótimo vê-lo novamente! Confira seus documentos ou faça o upload de
+        novos documentos abaixo.
+      </p>
     </div>
+  </div>
+
+  <!-- Grid de documentos -->
+  <div class="row g-4">
+    {% if documents %} {% for document in documents %}
+    <!-- Card de preview de documento -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <!-- Colocar embed do documento apenas da primeira pagina, não permitir scroll -->
+        <embed class="pdf-preview" src="data:application/pdf;base64,{{ document.content | b64encode }}" type="application/pdf">
+        <div class="card-body">
+          <h5 class="card-title">{{ document.name }}</h5>
+          <p class="card-text">
+            <!-- Opções de assinatura e visualização -->
+            {% if document.signature %}
+            <a
+              href="{{ url_for('verify_document', document_id=document.id) }}"
+              class="btn btn-success"
+              >Verificar Assinatura</a
+            >
+            {% else %}
+            <a
+              href="{{ url_for('sign_document', document_id=document.id) }}"
+              class="btn btn-warning"
+              >Assinar</a
+            >
+            {% endif %}
+            <a
+              href="{{ url_for('view_document', document_id=document.id) }}"
+              class="btn btn-secondary"
+              >Ver Documento</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endfor %} {% endif %}
+
+    <!-- Card de upload (skeleton) -->
+    <div class="col-md-4">
+      <div class="card border-dashed text-center shadow-sm opacity-75">
+        <a
+          href="{{ url_for('upload_document') }}"
+          class="text-decoration-none text-dark"
+        >
+          <div
+            class="card-body d-flex justify-content-center align-items-center"
+            style="height: 200px"
+          >
+            <h4 class="mb-0">Upload</h4>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

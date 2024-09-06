@@ -53,15 +53,32 @@ def logout():
 # ========================================
 # Home and Key Management
 # ========================================
+@app.context_processor
+def inject_user_data():
+    if 'user_id' in session:
+        user = get_user_by_id(session['user_id'])
+        keys_generated = user.public_key is not None
+        return dict(user=user, keys_generated=keys_generated)
+    return {}
+
+# ========================================
+# Home and Key Management
+# ========================================
+@app.context_processor
+def inject_user_data():
+    if 'user_id' in session:
+        user = get_user_by_id(session['user_id'])
+        keys_generated = bool(user.public_key)  # Verifica se a chave pública existe
+        return dict(user=user, keys_generated=keys_generated)
+    return {}
 
 @app.route('/')
 def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    user = get_user_by_id(session['user_id'])
-    keys_generated = user.public_key is not None
-    return render_template('layouts/home.html', user=user, keys_generated=keys_generated)
+    documents = get_all_documents_by_user(session['user_id'])
+    return render_template('layouts/home.html', documents=documents)
 
 @app.route('/generate_keys', methods=['GET', 'POST'])
 def generate_keys_view():
@@ -77,6 +94,9 @@ def generate_keys_view():
         user.public_key = public_key
         user.encrypted_private_key = encrypted_private_key
         db.session.commit()
+        
+        # Após gerar as chaves, definir `keys_generated` como True
+        session['keys_generated'] = True
         
         return redirect(url_for('home'))
     
@@ -111,7 +131,6 @@ def view_private_key():
             return redirect(url_for('view_private_key'))
     
     return render_template('shared/enter_password.html', action_title="Inserir Senha", action_heading="Inserir Senha para Ver Chave Privada", action_button_text="Ver Chave Privada")
-
 
 # ========================================
 # Document Management (Upload, Sign, View, Verify)

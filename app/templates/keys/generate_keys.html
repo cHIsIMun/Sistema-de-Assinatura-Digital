@@ -1,19 +1,22 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}Gerar Chaves{% endblock %}
+{% block title %}🔑 Gerar Par de Chaves{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Gerar Par de Chaves</h2>
-    <form method="POST">
-        {% set id = 'password' %}
-        {% set label = 'Senha' %}
-        {% set type = 'password' %}
-        {% set name = 'password' %}
-        {% set placeholder = 'Digite sua senha' %}
-        {% set value = '' %}
-        {% include 'components/form_group.html' %}
-        <button type="submit" class="btn btn-primary">Gerar</button>
-    </form>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg" style="width: 100%; max-width: 500px;">
+        <div class="card-body text-center">
+            <h2 class="card-title">🔑 Gerar Par de Chaves</h2>
+            <p class="card-text">🔐 Proteja seu par de chaves com uma senha forte.</p>
+            
+            <form method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="password" class="form-label">🔑 Senha</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua senha" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-3">Gerar Chaves</button>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -3,18 +3,19 @@
 {% block title %}Upload de Documento{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Upload de Documento</h2>
-    <form method="POST" enctype="multipart/form-data">
-        {% set id = 'document' %}
-        {% set label = 'Selecionar Documento' %}
-        {% set type = 'file' %}
-        {% set name = 'file' %}
-        {% set placeholder = '' %}
-        {% set value = '' %}
-        {% include 'components/form_group.html' %}
-        
-        <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg" style="width: 100%; max-width: 600px;">
+        <div class="card-body text-center">
+            <h2 class="card-title">📤 Upload de Documento</h2>
+            <p class="card-text">Faça o upload do seu documento para assinar ou verificar a assinatura. 📄</p>
+            <form method="POST" enctype="multipart/form-data" class="mt-4">
+                <div class="mb-3">
+                    <label for="document" class="form-label">📁 Selecione o Documento</label>
+                    <input class="form-control" type="file" id="document" name="file" accept="application/pdf" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Enviar Documento</button>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

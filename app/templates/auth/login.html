@@ -3,16 +3,21 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Login</h2>
-    <form method="POST">
-        {% with id='username', label='Usuário', type='text', name='username', placeholder='Digite seu nome de usuário', value='' %}
-            {% include 'components/form_group.html' %}
-        {% endwith %}
-        {% with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
-            {% include 'components/form_group.html' %}
-        {% endwith %}
-        <button type="submit" class="btn btn-primary">Login</button>
-    </form>
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow" style="width: 24rem;">
+        <div class="card-body text-center">
+            <h2 class="card-title">🔐 Login</h2>
+            <form method="POST" class="mt-4">
+                {% with id='username', label='Usuário', type='text', name='username', placeholder='Digite seu nome de usuário', value='' %}
+                    {% include 'components/form_group.html' %}
+                {% endwith %}
+                {% with id='password', label='Senha', type='password', name='password', placeholder='Digite sua senha', value='' %}
+                    {% include 'components/form_group.html' %}
+                {% endwith %}
+                <button type="submit" class="btn btn-primary btn-block w-100 mt-3">Entrar</button>
+            </form>
+            <p class="mt-3">📝 Ainda não tem uma conta? <a href="{{ url_for('register') }}">Cadastre-se</a></p>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -1,5 +1,15 @@
-<!-- components/form_group.html -->
 <div class="form-group text-start mb-3">
     <label for="{{ id }}">{{ label }}</label>
-    <input type="{{ type }}" class="form-control" id="{{ id }}" name="{{ name }}" placeholder="{{ placeholder }}" value="{{ value }}" required>
+    <input 
+        type="{{ type }}" 
+        class="form-control" 
+        id="{{ id }}" 
+        name="{{ name }}" 
+        placeholder="{{ placeholder }}" 
+        value="{{ value }}" 
+        {% if required %}required{% endif %}
+        {% if autofocus %}autofocus{% endif %}
+        {% if disabled %}disabled{% endif %}
+        aria-label="{{ label }}"
+    >
 </div>
