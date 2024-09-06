@@ -3,29 +3,34 @@
 {% block title %}Verificar Documento Assinado{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Verificar Documento Assinado</h2>
-    <form method="POST" enctype="multipart/form-data">
-        {% set id = 'file' %}
-        {% set label = 'Selecione um documento:' %}
-        {% set type = 'file' %}
-        {% set name = 'file' %}
-        {% set placeholder = '' %}
-        {% set value = '' %}
-        {% include 'components/form_group.html' %}
-        
-        <button type="submit" class="btn btn-primary mt-3">Verificar</button>
-    </form>
+<div class="d-flex align-items-center justify-content-center" style="height: 100vh; background-color: #f8f9fa;">
+    <div class="card shadow-lg p-4" style="border-radius: 15px;">
+        <div class="text-center">
+            <h2>Verificar Documento Assinado</h2>
+            <form method="POST" enctype="multipart/form-data">
+                {% set id = 'file' %}
+                {% set label = 'Selecione um documento:' %}
+                {% set type = 'file' %}
+                {% set name = 'file' %}
+                {% set placeholder = '' %}
+                {% set value = '' %}
+                {% include 'components/form_group.html' %}
 
-    {% if verification_result %}
-    <div class="mt-4">
-        <h3>Resultado da Verificação:</h3>
-        <p>{{ verification_result }}</p>
-        {% if document_info %}
-            <p><strong>Documento:</strong> {{ document_info.name }}</p>
-            <p><strong>Assinado por:</strong> {{ document_info.user.first_name }} {{ document_info.user.last_name }}</p>
-        {% endif %}
+                <button type="submit" class="btn btn-primary mt-3">Verificar</button>
+            </form>
+
+            {% if verification_result %}
+            <div class="mt-4">
+                <h3>Resultado da Verificação:</h3>
+                <p>{{ verification_result }}</p>
+                {% if document_info %}
+                <p><strong>Documento:</strong> {{ document_info.name }}</p>
+                <p><strong>Assinado por:</strong> {{ document_info.user.first_name }} {{ document_info.user.last_name }}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}

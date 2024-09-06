@@ -23,11 +23,11 @@
                 {% include 'components/form_group.html' %}
             {% endwith %}
             <div class="text-center">
-                <button type="submit" class="btn btn-primary btn-block" style="padding: 10px 0; font-size: 16px; border-radius: 10px;">Registrar</button>
+                <button type="submit" class="btn btn-primary btn-block" style="width: 50%; padding: 12px; font-size: 18px; border-radius: 8px;">Registrar</button>
             </div>
         </form>
         <div class="mt-3 text-center">
-            <a href="#" class="text-muted">Já tem uma conta? Faça login</a>
+            <a href="{{ url_for('login') }}" class="text-muted">Já tem uma conta? Faça login</a>
         </div>
     </div>
 </div>

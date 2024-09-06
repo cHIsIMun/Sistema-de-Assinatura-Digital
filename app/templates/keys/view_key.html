@@ -3,13 +3,16 @@
 {% block title %}Ver Chave{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2>Chave {{ key_type }}</h2>
-    <pre>{{ key }}</pre>
-    {% set url = url_for('home') %}
-    {% set style = 'secondary' %}
-    {% set text = 'Voltar' %}
-    {% include 'components/button.html' %}
+<div class="d-flex align-items-center justify-content-center" style="height: 100vh; background-color: #f8f9fa;">
+    <div class="card shadow-lg" style=" border-radius: 15px; padding: 2rem;">
+        <div class="text-center">
+            <h2>Chave {{ key_type }}</h2>
+            <pre>{{ key }}</pre>
+            {% set url = url_for('home') %}
+            {% set style = 'secondary' %}
+            {% set text = 'Voltar' %}
+            {% include 'components/button.html' %}
+        </div>
+    </div>
 </div>
 {% endblock %}
-    
